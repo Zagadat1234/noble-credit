@@ -1,0 +1,2748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Loan Credit — Dashboard (with Notifications)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0f1724;
+      --muted: #9aa4b2;
+      --accent-a: #06b6d4;
+      --accent-b: #7c3aed;
+      --glass: rgba(255,255,255,0.03);
+      --success: #16a34a;
+      --danger: #ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:
+      radial-gradient(900px 400px at 10% 10%, rgba(12,18,28,0.6), transparent),
+      linear-gradient(180deg,#061226,#081226 40%); color:#e6eef6; font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto;}
+    
+    /* Mobile First Approach */
+    .app{display:flex;flex-direction:column;height:100vh;gap:0}
+    
+    /* Sidebar - Hidden by default on mobile */
+    .sidebar{
+      width:100%;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-right:1px solid rgba(255,255,255,0.03);
+      padding:20px;
+      display:none;
+      flex-direction:column;
+      gap:18px;
+      position:fixed;
+      top:0;
+      left:0;
+      height:100vh;
+      z-index:1000;
+      overflow-y:auto;
+    }
+    
+    .sidebar.active{display:flex;}
+    
+    .sidebar-close{
+      display:none;
+      position:absolute;
+      top:20px;
+      right:20px;
+      background:none;
+      border:none;
+      color:var(--muted);
+      font-size:24px;
+      cursor:pointer;
+    }
+    
+    .brand{display:flex;align-items:center;gap:12px}
+    .brand .logo{width:44px;height:44px;border-radius:10px;background:linear-gradient(90deg,var(--accent-b),var(--accent-a));display:flex;align-items:center;justify-content:center;font-weight:800;color:#071028}
+    .nav{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+    .nav button{background:transparent;border:none;color:var(--muted);text-align:left;padding:12px;border-radius:8px;cursor:pointer;font-size:14px}
+    .nav button.active{background:rgba(255,255,255,0.02);color:#e6eef6}
+    .sidebar .small{font-size:12px;color:var(--muted)}
+    
+    /* Main Content */
+    .main{flex:1;display:flex;flex-direction:column;overflow:auto}
+    
+    /* Topbar - Mobile optimized */
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 16px;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      background:var(--bg);
+      position:sticky;
+      top:0;
+      z-index:100;
+    }
+    
+    .mobile-menu-btn{
+      display:none;
+      background:transparent;
+      border:none;
+      color:var(--muted);
+      font-size:20px;
+      cursor:pointer;
+      padding:8px;
+    }
+    
+    .search{
+      background:var(--glass);
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.02);
+      font-size:14px;
+      flex:1;
+      margin:0 12px;
+      max-width:200px;
+    }
+    
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .btn{
+      padding:10px 14px;
+      border-radius:10px;
+      border:none;
+      cursor:pointer;
+      font-weight:700;
+      background:linear-gradient(90deg,var(--accent-a),var(--accent-b));
+      color:#071128;
+      font-size:14px;
+      white-space:nowrap;
+    }
+    
+    /* Content Area */
+    .content{padding:16px}
+    
+    /* Cards - Responsive grid */
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      gap:12px;
+      margin-bottom:20px;
+    }
+    
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.03);
+      min-height:80px;
+    }
+    
+    .card h4{margin:0;font-size:12px;color:var(--muted)}
+    .card p{margin:6px 0 0;font-weight:800;font-size:16px}
+    
+    /* Layout - Stack on mobile */
+    .layout-two{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+    }
+    
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    
+    .panel h3{margin:0 0 12px;font-size:16px}
+    
+    /* Tables - Scrollable on mobile */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:12px;
+    }
+    
+    .table-container{
+      overflow-x:auto;
+      margin:0 -16px;
+      padding:0 16px;
+    }
+    
+    th,td{
+      padding:8px 6px;
+      text-align:left;
+      border-bottom:1px dashed rgba(255,255,255,0.03);
+      white-space:nowrap;
+    }
+    
+    th{color:var(--muted);font-weight:600;font-size:11px}
+    
+    .status{
+      padding:4px 8px;
+      border-radius:8px;
+      font-weight:700;
+      font-size:11px;
+      white-space:nowrap;
+    }
+    
+    .status.paid{background:rgba(22,163,74,0.12);color:var(--success)}
+    .status.pending{background:rgba(255,193,7,0.08);color:#ffd166}
+    .status.overdue{background:rgba(239,68,68,0.12);color:var(--danger)}
+    
+    /* Timeline */
+    .timeline{display:flex;flex-direction:column;gap:10px}
+    .t-item{display:flex;align-items:center;gap:10px;padding:8px 0}
+    .t-dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(90deg,var(--accent-a),var(--accent-b));flex-shrink:0}
+    
+    /* Modal - Mobile optimized */
+    .modal-bg{
+      position:fixed;
+      inset:0;
+      background:linear-gradient(180deg, rgba(1,6,15,0.8), rgba(1,6,15,0.8));
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:2000;
+      padding:20px;
+    }
+    
+    .modal{
+      width:100%;
+      max-width:400px;
+      background:linear-gradient(180deg,#071226,#081428);
+      padding:20px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.04);
+      max-height:90vh;
+      overflow-y:auto;
+    }
+    
+    .field{margin-bottom:12px}
+    .field label{display:block;margin-bottom:6px;font-size:14px}
+    
+    input, select{
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      background:transparent;
+      color:inherit;
+      font-size:14px;
+    }
+    
+    /* Toast - Mobile positioning */
+    .toast{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      left:16px;
+      background:#071226;
+      padding:12px 16px;
+      border-radius:8px;
+      border:1px solid rgba(255,255,255,0.04);
+      display:none;
+      z-index:1500;
+      font-size:14px;
+    }
+    
+    .toast.show{display:block;animation: slideIn .35s ease}
+    
+    @keyframes slideIn{
+      from{transform:translateY(12px);opacity:0}
+      to{transform:translateY(0);opacity:1}
+    }
+    
+    .notif-bubble{
+      background:#ef4444;
+      padding:2px 6px;
+      border-radius:999px;
+      font-weight:700;
+      color:#fff;
+      margin-left:8px;
+      font-size:10px;
+    }
+    
+    .notif-log{
+      max-height:200px;
+      overflow:auto;
+      margin-top:8px;
+      padding:8px;
+      background:rgba(255,255,255,0.02);
+      border-radius:8px;
+    }
+    
+    .notif-item{
+      padding:10px;
+      border-radius:8px;
+      margin-bottom:6px;
+      cursor:pointer;
+      background:rgba(255,255,255,0.01);
+      font-size:13px;
+    }
+    
+    .highlight { 
+      outline: 3px solid rgba(124,58,237,0.12); 
+      transition: outline 0.35s ease; 
+    }
+    
+    /* Loan list items for mobile */
+    .loan-item{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      padding:16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.03);
+      margin-bottom:12px;
+    }
+    
+    .loan-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      margin-bottom:12px;
+    }
+    
+    .loan-actions{
+      display:flex;
+      gap:8px;
+      margin-top:12px;
+    }
+    
+    .loan-actions .btn{
+      flex:1;
+      padding:8px 12px;
+      font-size:12px;
+    }
+    
+    .progress-bar{
+      height:8px;
+      background:rgba(255,255,255,0.03);
+      border-radius:8px;
+      overflow:hidden;
+      margin:8px 0;
+    }
+    
+    .progress-fill{
+      height:100%;
+      background:linear-gradient(90deg,var(--accent-a),var(--accent-b));
+      transition:width 0.3s ease;
+    }
+    
+    /* Toast container for multiple toasts */
+    #toast-area{
+      position:fixed;
+      right:16px;
+      bottom:16px;
+      left:16px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:2000;
+    }
+    
+    /* Improved loan cards */
+    .loan-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.05);
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .loan-card:hover {
+      border-color: rgba(124,58,237,0.3);
+      transform: translateY(-2px);
+    }
+
+    .loan-card.completed {
+      background: linear-gradient(180deg, rgba(22,163,74,0.05), rgba(22,163,74,0.02));
+      border-color: rgba(22,163,74,0.1);
+    }
+
+    .loan-header-enhanced {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .loan-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(6,182,212,0.15);
+      color: var(--accent-a);
+    }
+
+    .loan-badge.completed {
+      background: rgba(22,163,74,0.15);
+      color: var(--success);
+    }
+
+    .loan-badge.overdue {
+      background: rgba(239,68,68,0.15);
+      color: var(--danger);
+    }
+
+    .loan-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+      padding: 16px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 8px;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #e6eef6;
+    }
+
+    .installment-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .installment-card {
+      background: rgba(255,255,255,0.02);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.03);
+      transition: all 0.2s ease;
+    }
+
+    .installment-card.paid {
+      background: rgba(22,163,74,0.08);
+      border-color: rgba(22,163,74,0.15);
+    }
+
+    .installment-card.overdue {
+      background: rgba(239,68,68,0.08);
+      border-color: rgba(239,68,68,0.15);
+    }
+
+    .installment-card.due-soon {
+      background: rgba(255,193,7,0.08);
+      border-color: rgba(255,193,7,0.15);
+    }
+
+    .installment-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .installment-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .summary-card {
+      background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(124,58,237,0.05));
+      padding: 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(124,58,237,0.1);
+      text-align: center;
+    }
+
+    .summary-card .value {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 8px 0;
+      background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .summary-card .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+    
+    /* Desktop Styles */
+    @media (min-width: 768px) {
+      .app{flex-direction:row;gap:20px}
+      
+      .sidebar{
+        display:flex;
+        position:static;
+        width:260px;
+        height:100vh;
+      }
+      
+      .sidebar-close{display:none !important;}
+      .mobile-menu-btn{display:none !important;}
+      
+      .topbar{padding:18px 28px}
+      .content{padding:22px}
+      
+      .cards{
+        grid-template-columns:repeat(4,1fr);
+        gap:18px;
+        margin-bottom:22px;
+      }
+      
+      .card{padding:18px;min-height:auto}
+      .card h4{font-size:13px}
+      .card p{font-size:20px}
+      
+      .layout-two{
+        display:grid;
+        grid-template-columns:1fr 420px;
+        gap:18px;
+        flex-direction:row;
+      }
+      
+      .panel{padding:18px}
+      .panel h3{font-size:18px}
+      
+      table{font-size:14px}
+      th,td{padding:10px;font-size:14px}
+      th{font-size:12px}
+      
+      .status{font-size:13px;padding:6px 10px}
+      
+      .search{max-width:none;margin:0}
+      
+      .toast{
+        right:18px;
+        bottom:18px;
+        left:auto;
+        min-width:300px;
+      }
+      
+      #toast-area{
+        right:18px;
+        bottom:18px;
+        left:auto;
+        min-width:300px;
+      }
+    }
+    
+    /* Large Mobile */
+    @media (min-width: 480px) and (max-width: 767px) {
+      .cards{grid-template-columns:repeat(2,1fr)}
+      .search{max-width:250px}
+    }
+    
+    /* Small Mobile */
+    @media (max-width: 479px) {
+      .cards{grid-template-columns:1fr}
+      .top-actions{flex-direction:column;align-items:stretch}
+      .btn{text-align:center}
+      .search{margin:8px 0;max-width:none}
+      
+      .loan-stats {
+        grid-template-columns: 1fr 1fr;
+      }
+      
+      .installment-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .loan-header-enhanced {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Mobile Menu Button -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    
+    <aside class="sidebar" id="sidebar">
+      <button class="sidebar-close" onclick="toggleSidebar()">×</button>
+      
+      <div class="brand">
+        <div>
+          <div style="font-weight:800">Noble Credit</div>
+          <div class="small">Dashboard</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <button class="active" data-view="dashboard" onclick="switchView(event)">Dashboard</button>
+        <button data-view="loans" onclick="switchView(event)">My Loans</button>
+        <button data-view="repayments" onclick="switchView(event)">Repayments</button>
+        <button data-view="history" onclick="switchView(event)">Loan History</button>
+        <button data-view="notifications" onclick="switchView(event)">Notifications <span id="notif-count" class="notif-bubble" style="display:none">0</span></button>
+        <button data-view="settings" onclick="switchView(event)">Settings</button>
+      </div>
+
+      <div style="margin-top:auto">
+        <div class="small">Account</div>
+        <div style="margin-top:6px"><h3 id="welcomeUser"></h3></div>
+      </div>
+      <button id="logoutBtn" class="btn">Logout</button>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;flex:1">
+          <div class="search">🔍 Search loans, id, amount</div>
+        </div>
+        <div class="top-actions">
+          <button class="btn" onclick="openModal()">+ Quick Apply</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <!-- Dashboard -->
+        <section id="view-dashboard">
+          <div class="cards">
+            <div class="card"><h4>Total Borrowed</h4><p id="statBorrowed">₦0</p></div>
+            <div class="card"><h4>Amount Repaid</h4><p id="statRepaid">₦0</p></div>
+            <div class="card"><h4>Active Loans</h4><p id="statActive">0</p></div>
+            <div class="card"><h4>Next Due</h4><p id="statNextDue">—</p></div>
+          </div>
+
+          <div class="layout-two">
+            <div class="panel">
+              <h3>My Loans</h3>
+              <div class="table-container">
+                <table id="loansTable">
+                  <thead><tr><th>Loan ID</th><th>Principal</th><th>Term</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <aside class="panel">
+              <h3>Upcoming Repayments</h3>
+              <div id="upcoming" class="timeline"></div>
+              <div style="margin-top:12px">
+                <h4>Notification Preview</h4>
+                <div id="notif-preview" class="notif-log"></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Loans view -->
+        <section id="view-loans" style="display:none">
+          <div class="panel">
+            <h3>Loans & Schedules</h3>
+            <div id="loansList"></div>
+          </div>
+        </section>
+
+        <!-- Enhanced Repayments view -->
+        <section id="view-repayments" style="display:none">
+          <div class="panel">
+            <div style="display:flex;justify-content:between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+              <h3 style="margin:0">Repayment Schedule</h3>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button onclick="switchToView('dashboard')" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:inherit;padding:8px 16px;border-radius:8px;font-size:14px">
+                  ← Back to Dashboard
+                </button>
+              </div>
+            </div>
+            
+            <!-- Loan Summary Cards -->
+            <div id="repaymentSummary" class="cards" style="margin-bottom:20px;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr))">
+              <!-- Summary cards will be dynamically inserted here -->
+            </div>
+
+            <!-- Active Loans Section -->
+            <div id="activeLoansSection" style="margin-bottom:24px">
+              <h4 style="margin:0 0 16px 0;color:var(--accent-a);display:flex;align-items:center;gap:8px">
+                <span>📋</span> Active Loans
+              </h4>
+              <div id="activeLoansList"></div>
+            </div>
+
+            <!-- Completed Loans Section -->
+            <div id="completedLoansSection" style="margin-bottom:24px">
+              <h4 style="margin:0 0 16px 0;color:var(--success);display:flex;align-items:center;gap:8px">
+                <span>✅</span> Completed Loans
+              </h4>
+              <div id="completedLoansList"></div>
+            </div>
+
+            <!-- Detailed Schedule -->
+            <div id="detailedSchedule" style="display:none">
+              <h4 style="margin:0 0 16px 0;color:var(--muted)">Detailed Installment Schedule</h4>
+              <div id="repaymentSchedule"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- History view -->
+        <section id="view-history" style="display:none">
+          <div class="panel">
+            <h3>Loan History</h3>
+            <div class="table-container">
+              <table id="historyTable"><thead><tr><th>ID</th><th>Borrowed</th><th>Paid</th><th>Status</th></tr></thead><tbody></tbody></table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Notifications view -->
+        <section id="view-notifications" style="display:none">
+          <div class="panel">
+            <h3>Notification Center</h3>
+            <div id="notificationList" class="notif-log"></div>
+            <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+              <button class="btn" onclick="clearNotifications()">Clear all</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="view-settings" style="display:none">
+          <div class="panel">
+            <h3>Settings</h3>
+            <p class="small">Demo settings - theme, notifications, etc.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal-bg">
+    <div class="modal">
+      <h3>Quick Apply</h3>
+      <div class="field"><label>Name</label><input id="m-name" /></div>
+      <div class="field"><label>Email</label><input id="m-email" /></div>
+      <div class="field"><label>Amount</label><input id="m-amount" type="number" /></div>
+      <div class="field">
+        <label>Term (automatically calculated)</label>
+        <div style="padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); margin-top: 8px;">
+          <div id="term-display" style="font-weight: 600; color: var(--accent-a);">Calculating...</div>
+          <div class="small" style="color: var(--muted); margin-top: 4px;">Term is calculated based on loan amount</div>
+        </div>
+        <input type="hidden" id="m-term" />
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap">
+        <button onclick="closeModal()" style="background:transparent;border:1px solid rgba(255,255,255,0.04);padding:10px 16px;border-radius:8px;color:inherit;flex:1;min-width:120px">Cancel</button>
+        <button class="btn" onclick="submitApply()" style="flex:1;min-width:120px">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container (multiple toasts stack) -->
+  <div id="toast-area" style="position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;z-index:2000"></div>
+
+  <script>
+    // Storage keys - now user-specific
+const DB_KEY_PREFIX = 'lc_demo_loans_';
+const NOTIF_KEY_PREFIX = 'lc_demo_notifs_';
+const DAILY_INTEREST_RATE = 0.10 / 30; // 10% monthly interest = ~0.33% daily
+const MS_PER_MINUTE = 60 * 1000; // 1 minute in milliseconds
+const MINUTES_PER_DAY = 1; // 1 minute = 1 day
+
+// Get current user
+let currentUser = null;
+let timerInterval = null;
+
+// Enhanced error logging
+function logError(context, error, extraData = {}) {
+    console.error(`[${new Date().toISOString()}] Error in ${context}:`, error, extraData);
+    
+    // Store errors in localStorage for debugging
+    try {
+        const errorLog = JSON.parse(localStorage.getItem('lc_error_log') || '[]');
+        errorLog.unshift({
+            timestamp: Date.now(),
+            context,
+            error: error.message,
+            stack: error.stack,
+            extraData
+        });
+        // Keep only last 100 errors
+        localStorage.setItem('lc_error_log', JSON.stringify(errorLog.slice(0, 100)));
+    } catch (e) {
+        console.error('Failed to log error:', e);
+    }
+}
+
+// Safe DOM element access with fallbacks
+function safeGetElement(id, fallbackText = '') {
+    try {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.warn(`Element with id '${id}' not found`);
+        }
+        return element;
+    } catch (error) {
+        logError('safeGetElement', error, { id });
+        return null;
+    }
+}
+
+// Safe query selector with error handling
+function safeQuerySelector(selector, parent = document) {
+    try {
+        return parent.querySelector(selector);
+    } catch (error) {
+        logError('safeQuerySelector', error, { selector });
+        return null;
+    }
+}
+
+function safeQuerySelectorAll(selector, parent = document) {
+    try {
+        return Array.from(parent.querySelectorAll(selector));
+    } catch (error) {
+        logError('safeQuerySelectorAll', error, { selector });
+        return [];
+    }
+}
+
+// Safe number parsing with validation
+function safeParseNumber(value, defaultValue = 0) {
+    try {
+        if (value === null || value === undefined || value === '') return defaultValue;
+        
+        // Handle currency format
+        const cleaned = String(value).replace(/[₦,]/g, '').trim();
+        const parsed = parseFloat(cleaned);
+        
+        if (isNaN(parsed) || !isFinite(parsed)) {
+            return defaultValue;
+        }
+        
+        return Math.max(0, parsed); // Ensure non-negative
+    } catch (error) {
+        logError('safeParseNumber', error, { value, defaultValue });
+        return defaultValue;
+    }
+}
+
+// Safe localStorage operations
+function safeLocalStorageGet(key, defaultValue = null) {
+    try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : defaultValue;
+    } catch (error) {
+        logError('safeLocalStorageGet', error, { key });
+        return defaultValue;
+    }
+}
+
+function safeLocalStorageSet(key, value) {
+    try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+    } catch (error) {
+        logError('safeLocalStorageSet', error, { key, valueType: typeof value });
+        return false;
+    }
+}
+
+// Calculate loan term based on amount with validation
+function calculateLoanTerm(amount) {
+    try {
+        const safeAmount = safeParseNumber(amount, 0);
+        
+        if (safeAmount <= 0) return 20;
+        
+        if (safeAmount >= 1000 && safeAmount <= 10000) {
+            const minTerm = 20;
+            const maxTerm = 25;
+            const range = maxTerm - minTerm;
+            const normalizedAmount = (safeAmount - 1000) / (10000 - 1000);
+            return Math.max(minTerm, Math.min(maxTerm, Math.round(minTerm + (normalizedAmount * range))));
+        } else if (safeAmount > 10000 && safeAmount <= 50000) {
+            const minTerm = 26;
+            const maxTerm = 45;
+            const range = maxTerm - minTerm;
+            const normalizedAmount = (safeAmount - 10001) / (50000 - 10001);
+            return Math.max(minTerm, Math.min(maxTerm, Math.round(minTerm + (normalizedAmount * range))));
+        } else if (safeAmount > 50000) {
+            const minTerm = 46;
+            const maxTerm = 60;
+            const range = maxTerm - minTerm;
+            const normalizedAmount = Math.min(1, (safeAmount - 50001) / (100000 - 50001));
+            return Math.max(minTerm, Math.min(maxTerm, Math.round(minTerm + (normalizedAmount * range))));
+        } else {
+            return 20;
+        }
+    } catch (error) {
+        logError('calculateLoanTerm', error, { amount });
+        return 20; // Default fallback
+    }
+}
+
+// Seed demo data only if user has no loans
+function seedIfEmpty() {
+    try {
+        const db = readDB();
+        if (db.length === 0) {
+            // New users start with empty dashboard - no demo data
+            writeDB([]);
+        }
+    } catch (error) {
+        logError('seedIfEmpty', error);
+    }
+}
+
+// Mobile sidebar toggle with error handling
+function toggleSidebar() {
+    try {
+        const sidebar = safeGetElement('sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('active');
+        }
+    } catch (error) {
+        logError('toggleSidebar', error);
+    }
+}
+
+// Close sidebar when clicking on a link (mobile)
+function closeSidebarMobile() {
+    try {
+        if (window.innerWidth < 768) {
+            toggleSidebar();
+        }
+    } catch (error) {
+        logError('closeSidebarMobile', error);
+    }
+}
+
+// Utilities with error handling
+const $ = id => safeGetElement(id);
+
+function getUserKey(prefix) {
+    try {
+        if (!currentUser || !currentUser.email) return null;
+        return prefix + currentUser.email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    } catch (error) {
+        logError('getUserKey', error, { prefix });
+        return null;
+    }
+}
+
+function readDB() { 
+    try {
+        const key = getUserKey(DB_KEY_PREFIX);
+        if (!key) return [];
+        return safeLocalStorageGet(key, []);
+    } catch (error) {
+        logError('readDB', error);
+        return [];
+    }
+}
+
+function writeDB(v) { 
+    try {
+        const key = getUserKey(DB_KEY_PREFIX);
+        if (!key) return false;
+        return safeLocalStorageSet(key, v);
+    } catch (error) {
+        logError('writeDB', error, { dataType: typeof v });
+        return false;
+    }
+}
+
+function readNotifs() { 
+    try {
+        const key = getUserKey(NOTIF_KEY_PREFIX);
+        if (!key) return [];
+        return safeLocalStorageGet(key, []);
+    } catch (error) {
+        logError('readNotifs', error);
+        return [];
+    }
+}
+
+function writeNotifs(v) { 
+    try {
+        const key = getUserKey(NOTIF_KEY_PREFIX);
+        if (!key) return false;
+        return safeLocalStorageSet(key, v);
+    } catch (error) {
+        logError('writeNotifs', error, { dataType: typeof v });
+        return false;
+    }
+}
+
+function uid(prefix = 'L') { 
+    try {
+        return prefix + Math.random().toString(36).slice(2, 9).toUpperCase();
+    } catch (error) {
+        logError('uid', error);
+        return prefix + 'FALLBACK' + Date.now().toString(36);
+    }
+}
+
+function formatCurrency(n) { 
+    try {
+        const v = safeParseNumber(n, 0);
+        return '₦' + v.toLocaleString();
+    } catch (error) {
+        logError('formatCurrency', error, { n });
+        return '₦0';
+    }
+}
+
+// Format time display with validation
+function formatTimeDisplay(minutes) {
+    try {
+        const safeMinutes = safeParseNumber(minutes, 0);
+        const days = Math.floor(safeMinutes / MINUTES_PER_DAY);
+        const remainingMinutes = safeMinutes % MINUTES_PER_DAY;
+        
+        if (days > 0) {
+            return `${days} day${days !== 1 ? 's' : ''} ${remainingMinutes} min${remainingMinutes !== 1 ? 's' : ''}`;
+        } else {
+            return `${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+        }
+    } catch (error) {
+        logError('formatTimeDisplay', error, { minutes });
+        return '0 minutes';
+    }
+}
+
+// Calculate interest based on days held with validation
+function calculateInterest(principal, daysHeld) {
+    try {
+        const safePrincipal = safeParseNumber(principal, 0);
+        const safeDaysHeld = safeParseNumber(daysHeld, 0);
+        
+        if (safePrincipal <= 0 || safeDaysHeld <= 0) return 0;
+        
+        return safePrincipal * DAILY_INTEREST_RATE * safeDaysHeld;
+    } catch (error) {
+        logError('calculateInterest', error, { principal, daysHeld });
+        return 0;
+    }
+}
+
+// Get days between two timestamps with validation
+function getDaysBetween(start, end) {
+    try {
+        const safeStart = safeParseNumber(start, Date.now());
+        const safeEnd = safeParseNumber(end, Date.now());
+        const minutes = (safeEnd - safeStart) / MS_PER_MINUTE;
+        return Math.max(0, Math.floor(minutes / MINUTES_PER_DAY));
+    } catch (error) {
+        logError('getDaysBetween', error, { start, end });
+        return 0;
+    }
+}
+
+// Get minutes held for timer display with validation
+function getMinutesHeld(start, end) {
+    try {
+        const safeStart = safeParseNumber(start, Date.now());
+        const safeEnd = safeParseNumber(end, Date.now());
+        return Math.max(0, Math.floor((safeEnd - safeStart) / MS_PER_MINUTE));
+    } catch (error) {
+        logError('getMinutesHeld', error, { start, end });
+        return 0;
+    }
+}
+
+// Create loan object with validation and error handling
+function createLoanObj(name, email, amount, termDays = null, createdAt = null) {
+    try {
+        const safePrincipal = safeParseNumber(amount, 0);
+        if (safePrincipal <= 0) {
+            throw new Error('Invalid loan amount');
+        }
+
+        const id = uid();
+        const start = safeParseNumber(createdAt, Date.now());
+        
+        // Calculate term based on amount if not provided, otherwise use provided term
+        const calculatedTermDays = safeParseNumber(termDays, calculateLoanTerm(safePrincipal));
+        const safeTermDays = Math.max(1, Math.min(365, calculatedTermDays));
+        
+        // Create dynamic installments
+        const installments = [];
+        
+        for (let i = 1; i <= safeTermDays; i++) {
+            const dueDate = start + (i * MINUTES_PER_DAY * MS_PER_MINUTE);
+            installments.push({
+                idx: i,
+                due: dueDate,
+                amount: 0,
+                paid: false,
+                paidAt: null,
+                daysCovered: 1
+            });
+        }
+        
+        return { 
+            id, 
+            name: String(name || 'Unknown'), 
+            email: String(email || 'unknown@example.com'), 
+            principal: safePrincipal, 
+            termDays: safeTermDays,
+            installments, 
+            createdAt: start, 
+            status: 'active',
+            totalPaid: 0,
+            lastCalculation: start
+        };
+    } catch (error) {
+        logError('createLoanObj', error, { name, email, amount, termDays, createdAt });
+        // Return a safe default loan object
+        return {
+            id: uid(),
+            name: 'Error Loan',
+            email: 'error@example.com',
+            principal: 0,
+            termDays: 30,
+            installments: [],
+            createdAt: Date.now(),
+            status: 'error',
+            totalPaid: 0,
+            lastCalculation: Date.now()
+        };
+    }
+}
+
+// Calculate current amount due with comprehensive error handling
+function calculateCurrentDue(loan) {
+    try {
+        if (!loan || typeof loan !== 'object') {
+            throw new Error('Invalid loan object');
+        }
+        
+        const now = Date.now();
+        const daysHeld = getDaysBetween(loan.createdAt, now);
+        const interest = calculateInterest(loan.principal, daysHeld);
+        const total = loan.principal + interest;
+        
+        // Ensure we don't return negative or invalid values
+        return Math.max(0, total);
+    } catch (error) {
+        logError('calculateCurrentDue', error, { loan });
+        return 0;
+    }
+}
+
+// Calculate dynamic installment amount with error handling
+function calculateDynamicInstallmentAmount(loan, installmentIdx) {
+    try {
+        if (!loan || !loan.installments) return 0;
+        
+        const installment = loan.installments[safeParseNumber(installmentIdx, 1) - 1];
+        if (!installment) return 0;
+        
+        const now = Date.now();
+        const daysUntilDue = getDaysBetween(now, installment.due);
+        
+        // If installment is overdue or due today
+        if (daysUntilDue <= 0) {
+            const daysHeld = getDaysBetween(loan.createdAt, now);
+            const currentTotalDue = calculateCurrentDue(loan);
+            const remainingInstallments = loan.installments.filter(inst => !inst.paid && inst.due <= now).length;
+            
+            if (remainingInstallments > 0) {
+                return Math.max(0, currentTotalDue / remainingInstallments);
+            }
+        }
+        
+        // For future installments
+        const projectedDaysHeld = getDaysBetween(loan.createdAt, installment.due);
+        const projectedTotalDue = loan.principal + calculateInterest(loan.principal, projectedDaysHeld);
+        const remainingFutureInstallments = loan.installments.filter(inst => !inst.paid && inst.due > now).length;
+        
+        if (remainingFutureInstallments > 0) {
+            return Math.max(0, projectedTotalDue / remainingFutureInstallments);
+        }
+        
+        return Math.max(0, projectedTotalDue / Math.max(1, loan.installments.length));
+    } catch (error) {
+        logError('calculateDynamicInstallmentAmount', error, { loan, installmentIdx });
+        return 0;
+    }
+}
+
+// Calculate payment progress with error handling
+function calculatePaymentProgress(loan) {
+    try {
+        if (!loan) {
+            return { currentDue: 0, amountPaid: 0, remainingBalance: 0, progress: 0 };
+        }
+        
+        const currentDue = calculateCurrentDue(loan);
+        const amountPaid = safeParseNumber(loan.totalPaid, 0);
+        const remainingBalance = Math.max(0, currentDue - amountPaid);
+        const progress = currentDue > 0 ? (amountPaid / currentDue) * 100 : 0;
+        
+        return {
+            currentDue,
+            amountPaid,
+            remainingBalance,
+            progress: Math.min(100, Math.max(0, Math.round(progress)))
+        };
+    } catch (error) {
+        logError('calculatePaymentProgress', error, { loan });
+        return { currentDue: 0, amountPaid: 0, remainingBalance: 0, progress: 0 };
+    }
+}
+
+// Check if payment completes the loan with validation
+function checkLoanCompletion(loan, paymentAmount) {
+    try {
+        if (!loan) return false;
+        
+        const progressData = calculatePaymentProgress(loan);
+        const remainingBeforePayment = progressData.remainingBalance;
+        const safePaymentAmount = safeParseNumber(paymentAmount, 0);
+        const remainingAfterPayment = remainingBeforePayment - safePaymentAmount;
+        
+        return remainingAfterPayment <= 0;
+    } catch (error) {
+        logError('checkLoanCompletion', error, { loan, paymentAmount });
+        return false;
+    }
+}
+
+// Complete loan with comprehensive error handling
+function completeLoan(loan, paymentTimestamp) {
+    try {
+        if (!loan || loan.status === 'paid') return null;
+        
+        const now = safeParseNumber(paymentTimestamp, Date.now());
+        const daysHeld = getDaysBetween(loan.createdAt, now);
+        
+        // Mark all unpaid installments as paid
+        loan.installments.forEach(inst => {
+            if (!inst.paid) {
+                inst.paid = true;
+                inst.paidAt = now;
+                const instDaysHeld = getDaysBetween(loan.createdAt, inst.due);
+                const instInterest = calculateInterest(loan.principal, instDaysHeld);
+                inst.amount = (loan.principal + instInterest) / Math.max(1, loan.installments.length);
+            }
+        });
+        
+        // Update total paid to match current due
+        const currentDue = calculateCurrentDue(loan);
+        loan.totalPaid = currentDue;
+        loan.status = 'paid';
+        
+        const totalInterest = calculateInterest(loan.principal, daysHeld);
+        const minutesHeld = getMinutesHeld(loan.createdAt, now);
+        
+        pushNotification({
+            loanId: loan.id,
+            message: `🎉 Loan ${loan.id} fully repaid! Paid early after ${daysHeld} days (${formatTimeDisplay(minutesHeld)}). Total interest: ${formatCurrency(totalInterest)}`,
+            level: 'success',
+            ts: now
+        });
+        
+        return {
+            daysHeld,
+            totalInterest,
+            totalPaid: currentDue
+        };
+    } catch (error) {
+        logError('completeLoan', error, { loan, paymentTimestamp });
+        return null;
+    }
+}
+
+// Notifications (toast + log)
+function pushNotification(payload) {
+    try {
+        const notifs = readNotifs();
+        notifs.unshift(payload);
+        writeNotifs(notifs);
+        renderNotifCount();
+        renderNotificationListPreview();
+        showToast(payload);
+    } catch (error) {
+        logError('pushNotification', error, { payload });
+    }
+}
+
+function showToast(n) {
+    try {
+        const area = safeGetElement('toast-area');
+        if (!area) return;
+        
+        const div = document.createElement('div');
+        div.className = 'toast';
+        
+        // Color by level
+        if (n.level === 'success') div.style.background = 'linear-gradient(90deg,#16a34a,#059669)';
+        else if (n.level === 'warning') div.style.background = 'linear-gradient(90deg,#f59e0b,#f97316)';
+        else if (n.level === 'danger') div.style.background = 'linear-gradient(90deg,#ef4444,#c026d3)';
+        else div.style.background = 'linear-gradient(90deg,var(--accent-a),var(--accent-b))';
+        
+        div.textContent = n.message;
+        div.style.cursor = 'pointer';
+        div.onclick = () => { 
+            try {
+                if (n.loanId) { 
+                    openAndHighlightLoan(n.loanId); 
+                    switchToView('repayments'); 
+                }
+                div.remove();
+            } catch (clickError) {
+                logError('toastClick', clickError);
+            }
+        };
+        
+        area.appendChild(div);
+        
+        // Auto remove after 6s
+        setTimeout(() => { 
+            try {
+                if (div.parentNode) div.remove();
+            } catch (removeError) {
+                logError('toastRemove', removeError);
+            }
+        }, 6000);
+    } catch (error) {
+        logError('showToast', error, { n });
+    }
+}
+
+function renderNotifCount() {
+    try {
+        const notifs = readNotifs();
+        const count = notifs.length;
+        const el = safeGetElement('notif-count');
+        if (!el) return;
+        
+        if (count > 0) { 
+            el.style.display = 'inline-block'; 
+            el.textContent = count; 
+        } else { 
+            el.style.display = 'none'; 
+        }
+    } catch (error) {
+        logError('renderNotifCount', error);
+    }
+}
+
+function renderNotificationListPreview() {
+    try {
+        const preview = safeGetElement('notif-preview');
+        if (!preview) return;
+        
+        preview.innerHTML = '';
+        const notifs = readNotifs().slice(0, 6);
+        
+        notifs.forEach(n => {
+            try {
+                const div = document.createElement('div');
+                div.className = 'notif-item';
+                div.textContent = `${new Date(n.ts).toLocaleString()} — ${n.message}`;
+                div.onclick = () => { 
+                    try {
+                        if (n.loanId) { 
+                            openAndHighlightLoan(n.loanId); 
+                            switchToView('repayments'); 
+                        }
+                    } catch (clickError) {
+                        logError('notifPreviewClick', clickError);
+                    }
+                };
+                preview.appendChild(div);
+            } catch (itemError) {
+                logError('renderNotificationListPreview_item', itemError);
+            }
+        });
+    } catch (error) {
+        logError('renderNotificationListPreview', error);
+    }
+}
+
+function renderNotificationCenter() {
+    try {
+        const list = safeGetElement('notificationList');
+        if (!list) return;
+        
+        list.innerHTML = '';
+        const notifs = readNotifs();
+        
+        if (notifs.length === 0) {
+            list.innerHTML = '<div class="small" style="color:var(--muted)">No notifications yet</div>';
+            return;
+        }
+        
+        notifs.forEach(n => {
+            try {
+                const div = document.createElement('div');
+                div.className = 'notif-item';
+                div.innerHTML = `<div style="font-size:13px;color:var(--muted)">${new Date(n.ts).toLocaleString()}</div><div style="margin-top:6px">${n.message}</div>`;
+                div.onclick = () => { 
+                    try {
+                        if (n.loanId) { 
+                            openAndHighlightLoan(n.loanId); 
+                            switchToView('repayments'); 
+                        }
+                    } catch (clickError) {
+                        logError('notificationCenterClick', clickError);
+                    }
+                };
+                list.appendChild(div);
+            } catch (itemError) {
+                logError('renderNotificationCenter_item', itemError);
+            }
+        });
+    } catch (error) {
+        logError('renderNotificationCenter', error);
+    }
+}
+
+function clearNotifications() {
+    try {
+        writeNotifs([]);
+        renderNotifCount();
+        renderNotificationListPreview();
+        renderNotificationCenter();
+    } catch (error) {
+        logError('clearNotifications', error);
+    }
+}
+
+// Update all timers with error resilience
+function updateAllTimers() {
+    try {
+        const db = readDB();
+        const now = Date.now();
+        
+        // Update dashboard stats
+        renderStats();
+        
+        // Update loan list timers and amounts
+        db.forEach(loan => {
+            try {
+                if (loan.status === 'active') {
+                    const minutesHeld = getMinutesHeld(loan.createdAt, now);
+                    const progressData = calculatePaymentProgress(loan);
+                    
+                    // Safe DOM updates
+                    const timerElement = safeQuerySelector(`[data-loan-id="${loan.id}"] .loan-timer`);
+                    if (timerElement) {
+                        timerElement.textContent = `Time held: ${formatTimeDisplay(minutesHeld)}`;
+                    }
+                    
+                    // Update other elements safely...
+                    const elementsToUpdate = [
+                        { selector: `[data-loan-id="${loan.id}"] .current-due-amount`, value: formatCurrency(progressData.currentDue) },
+                        { selector: `[data-loan-id="${loan.id}"] .progress-text`, value: `${progressData.progress}%` },
+                        { selector: `[data-loan-id="${loan.id}"] .paid-amount`, value: formatCurrency(progressData.amountPaid) },
+                        { selector: `[data-loan-id="${loan.id}"] .remaining-amount`, value: formatCurrency(progressData.remainingBalance) },
+                        { selector: `[data-loan-id="${loan.id}"] .schedule-timer`, value: `Loan active for: ${formatTimeDisplay(minutesHeld)}` }
+                    ];
+                    
+                    elementsToUpdate.forEach(({ selector, value }) => {
+                        const element = safeQuerySelector(selector);
+                        if (element) {
+                            element.textContent = value;
+                        }
+                    });
+                    
+                    // Update progress bar
+                    const progressFill = safeQuerySelector(`[data-loan-id="${loan.id}"] .progress-fill`);
+                    if (progressFill) {
+                        progressFill.style.width = `${progressData.progress}%`;
+                    }
+                    
+                    // Update schedule amounts
+                    const scheduleRows = safeQuerySelectorAll(`[data-loan-id="${loan.id}"] .installment-row`);
+                    scheduleRows.forEach(row => {
+                        try {
+                            const installmentIdx = safeParseNumber(row.dataset.installmentIdx, 1);
+                            const dynamicAmount = calculateDynamicInstallmentAmount(loan, installmentIdx);
+                            const amountCell = safeQuerySelector('.installment-amount', row);
+                            if (amountCell) {
+                                amountCell.textContent = formatCurrency(dynamicAmount);
+                            }
+                        } catch (rowError) {
+                            logError('updateAllTimers_row', rowError, { loanId: loan.id });
+                        }
+                    });
+                }
+            } catch (loanError) {
+                logError('updateAllTimers_loan', loanError, { loanId: loan.id });
+            }
+        });
+    } catch (error) {
+        logError('updateAllTimers', error);
+    }
+}
+
+// Handle custom payment amounts
+function payCustomAmount(loanId) {
+    try {
+        const db = readDB();
+        const loan = db.find(l => l.id === loanId);
+        if (!loan || loan.status === 'paid') return;
+
+        const progressData = calculatePaymentProgress(loan);
+        const minutesHeld = getMinutesHeld(loan.createdAt, Date.now());
+
+        const amount = prompt(`Enter payment amount for loan ${loanId}\n\nTime Held: ${formatTimeDisplay(minutesHeld)}\nCurrent Due: ${formatCurrency(progressData.currentDue)}\nAmount Paid: ${formatCurrency(progressData.amountPaid)}\nRemaining Balance: ${formatCurrency(progressData.remainingBalance)}\n\nEnter amount to pay:`, formatCurrency(progressData.remainingBalance));
+
+        if (!amount) return;
+
+        // Parse the amount (remove currency symbol and commas)
+        const paymentAmount = safeParseNumber(amount, progressData.remainingBalance);
+        
+        if (paymentAmount <= 0) {
+            pushNotification({
+                message: 'Please enter a valid payment amount',
+                level: 'danger',
+                ts: Date.now()
+            });
+            return;
+        }
+
+        if (paymentAmount > progressData.remainingBalance) {
+            pushNotification({
+                message: `Payment amount cannot exceed remaining balance of ${formatCurrency(progressData.remainingBalance)}`,
+                level: 'danger',
+                ts: Date.now()
+            });
+            return;
+        }
+
+        processCustomPayment(loan, paymentAmount, db);
+    } catch (error) {
+        logError('payCustomAmount', error, { loanId });
+    }
+}
+
+// Process the custom payment
+function processCustomPayment(loan, paymentAmount, db) {
+    try {
+        let remainingPayment = paymentAmount;
+        const now = Date.now();
+        const minutesHeld = getMinutesHeld(loan.createdAt, now);
+
+        // Check if this payment completes the loan
+        if (checkLoanCompletion(loan, paymentAmount)) {
+            // Payment covers the full remaining balance - complete the loan
+            completeLoan(loan, now);
+            writeDB(db);
+            renderAll();
+            return;
+        }
+
+        // Otherwise, process payment normally
+        // Pay installments in chronological order
+        const unpaidInstallments = loan.installments
+            .filter(inst => !inst.paid)
+            .sort((a, b) => a.due - b.due);
+
+        for (let inst of unpaidInstallments) {
+            if (remainingPayment <= 0) break;
+            
+            const dynamicAmount = calculateDynamicInstallmentAmount(loan, inst.idx);
+            const amountToPay = Math.min(dynamicAmount, remainingPayment);
+            
+            inst.paid = true;
+            inst.paidAt = now;
+            inst.amount = amountToPay;
+            loan.totalPaid = (loan.totalPaid || 0) + amountToPay;
+            remainingPayment -= amountToPay;
+
+            pushNotification({
+                loanId: loan.id,
+                message: `Paid installment ${inst.idx}: ${formatCurrency(amountToPay)}`,
+                level: 'success',
+                ts: now
+            });
+        }
+
+        // If there's still money left, apply it as advance payment
+        if (remainingPayment > 0) {
+            loan.totalPaid += remainingPayment;
+            pushNotification({
+                loanId: loan.id,
+                message: `Applied advance payment: ${formatCurrency(remainingPayment)}`,
+                level: 'info',
+                ts: now
+            });
+        }
+
+        // Check if loan is fully paid after this payment
+        if (loan.installments.every(i => i.paid)) {
+            loan.status = 'paid';
+            const daysHeld = getDaysBetween(loan.createdAt, now);
+            const totalInterest = calculateInterest(loan.principal, daysHeld);
+            pushNotification({
+                loanId: loan.id,
+                message: `Loan ${loan.id} fully repaid! Held for ${daysHeld} days (${formatTimeDisplay(minutesHeld)}). Interest: ${formatCurrency(totalInterest)}`,
+                level: 'success',
+                ts: now
+            });
+        }
+
+        writeDB(db);
+        renderAll();
+    } catch (error) {
+        logError('processCustomPayment', error, { loanId: loan?.id, paymentAmount });
+    }
+}
+
+// Update the repayFull function to complete the loan
+function repayFull(loanId) {
+    try {
+        const db = readDB();
+        const loan = db.find(l => l.id === loanId);
+        if (!loan) return;
+
+        const progressData = calculatePaymentProgress(loan);
+        const minutesHeld = getMinutesHeld(loan.createdAt, Date.now());
+
+        const confirmFull = confirm(`Pay off full remaining balance and complete the loan?\n\nLoan: ${loanId}\nTime Held: ${formatTimeDisplay(minutesHeld)}\nFull Amount Due: ${formatCurrency(progressData.currentDue)}\nAlready Paid: ${formatCurrency(progressData.amountPaid)}\nRemaining Balance: ${formatCurrency(progressData.remainingBalance)}\n\nThis will mark the loan as COMPLETED regardless of remaining term.`);
+
+        if (confirmFull) {
+            // Complete the loan - pay the full remaining balance and mark as paid
+            completeLoan(loan, Date.now());
+            writeDB(db);
+            renderAll();
+        } else {
+            // Let user enter custom amount
+            payCustomAmount(loanId);
+        }
+    } catch (error) {
+        logError('repayFull', error, { loanId });
+    }
+}
+
+// Reminder system: check every second for due installments
+function checkReminders() {
+    try {
+        const db = readDB();
+        const now = Date.now();
+        
+        db.forEach(loan => {
+            try {
+                if (loan.status === 'active') {
+                    const daysHeld = getDaysBetween(loan.createdAt, now);
+                    const currentDue = calculateCurrentDue(loan);
+                    
+                    // Check for due installments
+                    loan.installments.forEach(inst => {
+                        try {
+                            if (!inst.paid) {
+                                const notifKey = `notif_fired_${currentUser?.email}_${loan.id}_${inst.idx}`;
+                                const fired = localStorage.getItem(notifKey);
+                                
+                                if (now >= inst.due && !fired) {
+                                    const dynamicAmount = calculateDynamicInstallmentAmount(loan, inst.idx);
+                                    const msg = `Reminder: Loan ${loan.id} installment ${inst.idx} of ${formatCurrency(dynamicAmount)} is due.`;
+                                    pushNotification({ loanId: loan.id, message: msg, level: 'warning', ts: Date.now() });
+                                    localStorage.setItem(notifKey, '1');
+                                }
+                            }
+                        } catch (instError) {
+                            logError('checkReminders_installment', instError, { loanId: loan.id, installmentIdx: inst.idx });
+                        }
+                    });
+                    
+                    // Notify if loan term is ending soon (within 7 days)
+                    if (daysHeld >= loan.termDays - 7 && daysHeld < loan.termDays) {
+                        const termKey = `term_ending_${currentUser?.email}_${loan.id}`;
+                        if (!localStorage.getItem(termKey)) {
+                            const msg = `Loan ${loan.id} term ends in ${loan.termDays - daysHeld} days. Current due: ${formatCurrency(currentDue)}`;
+                            pushNotification({ loanId: loan.id, message: msg, level: 'warning', ts: Date.now() });
+                            localStorage.setItem(termKey, '1');
+                        }
+                    }
+                    
+                    // Notify if loan is overdue
+                    if (daysHeld > loan.termDays) {
+                        const overdueKey = `overdue_${currentUser?.email}_${loan.id}`;
+                        if (!localStorage.getItem(overdueKey)) {
+                            const msg = `Loan ${loan.id} is overdue! Current due: ${formatCurrency(currentDue)}`;
+                            pushNotification({ loanId: loan.id, message: msg, level: 'danger', ts: Date.now() });
+                            localStorage.setItem(overdueKey, '1');
+                        }
+                    }
+                }
+                
+                // If loan fully paid and hasn't been announced, announce it
+                if (loan.installments.every(i => i.paid)) {
+                    const paidKey = `loan_paid_announced_${currentUser?.email}_${loan.id}`;
+                    if (!localStorage.getItem(paidKey)) {
+                        const daysHeld = getDaysBetween(loan.createdAt, loan.installments[loan.installments.length - 1].paidAt);
+                        const interestPaid = calculateInterest(loan.principal, daysHeld);
+                        pushNotification({
+                            loanId: loan.id, 
+                            message: `Well done! Loan ${loan.id} fully repaid in ${daysHeld} days. Interest paid: ${formatCurrency(interestPaid)}`, 
+                            level: 'success', 
+                            ts: Date.now()
+                        });
+                        localStorage.setItem(paidKey, '1');
+                    }
+                }
+            } catch (loanError) {
+                logError('checkReminders_loan', loanError, { loanId: loan.id });
+            }
+        });
+        
+        // Update timers every second
+        updateAllTimers();
+    } catch (error) {
+        logError('checkReminders', error);
+    }
+}
+
+// Rendering functions
+function renderAll() {
+    try {
+        renderStats();
+        renderLoansTable();
+        renderUpcoming();
+        renderLoansList();
+        renderHistory();
+        renderRepaymentSchedule();
+        renderNotifCount();
+        renderNotificationListPreview();
+        renderNotificationCenter();
+        updateAllTimers(); // Initialize timers and dynamic amounts
+    } catch (error) {
+        logError('renderAll', error);
+    }
+}
+
+function renderStats() {
+    try {
+        const db = readDB();
+        const totalBorrowed = db.reduce((s, l) => s + safeParseNumber(l.principal, 0), 0);
+        const totalRepaid = db.reduce((s, l) => s + safeParseNumber(l.totalPaid, 0), 0);
+        const active = db.filter(l => l.status === 'active').length;
+        
+        // Find next due installment with dynamic amount
+        let nextDueObj = null;
+        db.forEach(loan => {
+            try {
+                if (loan.status === 'active') {
+                    loan.installments.forEach(inst => {
+                        if (!inst.paid && (!nextDueObj || inst.due < nextDueObj.due)) {
+                            const amount = calculateDynamicInstallmentAmount(loan, inst.idx);
+                            nextDueObj = {
+                                loanId: loan.id,
+                                loanName: loan.name,
+                                due: inst.due,
+                                amount: amount,
+                                paid: false
+                            };
+                        }
+                    });
+                }
+            } catch (loanError) {
+                logError('renderStats_loan', loanError, { loanId: loan.id });
+            }
+        });
+        
+        setText('statBorrowed', formatCurrency(totalBorrowed));
+        setText('statRepaid', formatCurrency(totalRepaid));
+        setText('statActive', String(active));
+        setText('statNextDue', nextDueObj ? (new Date(nextDueObj.due).toLocaleString() + ' • ' + formatCurrency(nextDueObj.amount)) : '—');
+    } catch (error) {
+        logError('renderStats', error);
+    }
+}
+
+function setText(id, text) {
+    try {
+        const el = safeGetElement(id);
+        if (el) el.textContent = text;
+    } catch (error) {
+        logError('setText', error, { id, text });
+    }
+}
+
+function renderLoansTable() {
+    try {
+        const db = readDB();
+        const tbody = safeQuerySelector('#loansTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        db.forEach(l => {
+            try {
+                const tr = document.createElement('tr');
+                const statusClass = l.status === 'active' ? 'pending' : 'paid';
+                const progressData = calculatePaymentProgress(l);
+                const minutesHeld = getMinutesHeld(l.createdAt, Date.now());
+                tr.innerHTML = `
+                    <td>${l.id}</td>
+                    <td>${formatCurrency(l.principal)}</td>
+                    <td>${l.termDays}d</td>
+                    <td class="current-due-amount">${formatCurrency(progressData.currentDue)}</td>
+                    <td><span class='status ${statusClass}'>${l.status}</span></td>
+                    <td>
+                        <div class="small" style="color:var(--muted)">${formatTimeDisplay(minutesHeld)}</div>
+                        <button onclick="openLoan('${l.id}')" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:inherit;padding:6px 10px;border-radius:6px;font-size:12px;margin-top:4px">Open</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            } catch (rowError) {
+                logError('renderLoansTable_row', rowError, { loanId: l.id });
+            }
+        });
+    } catch (error) {
+        logError('renderLoansTable', error);
+    }
+}
+
+function renderUpcoming() {
+    try {
+        const db = readDB();
+        const upcoming = [];
+        
+        db.forEach(loan => {
+            try {
+                if (loan.status === 'active') {
+                    loan.installments.forEach(inst => {
+                        if (!inst.paid) {
+                            const amount = calculateDynamicInstallmentAmount(loan, inst.idx);
+                            upcoming.push({
+                                loanId: loan.id,
+                                loanName: loan.name,
+                                due: inst.due,
+                                amount: amount,
+                                paid: false
+                            });
+                        }
+                    });
+                }
+            } catch (loanError) {
+                logError('renderUpcoming_loan', loanError, { loanId: loan.id });
+            }
+        });
+        
+        upcoming.sort((a, b) => a.due - b.due).slice(0, 6);
+        
+        const el = safeGetElement('upcoming'); 
+        if (!el) return; 
+        el.innerHTML = '';
+        
+        upcoming.forEach(u => {
+            try {
+                const div = document.createElement('div');
+                div.className = 't-item';
+                const dueDate = new Date(u.due);
+                div.innerHTML = `<div class='t-dot'></div><div style="flex:1"><div style='font-weight:700;font-size:14px'>${u.loanName}</div><div class='small' style='color:var(--muted);font-size:12px'>Due: ${dueDate.toLocaleString()}</div></div><div style='font-weight:700;font-size:14px'>${formatCurrency(u.amount)}</div>`;
+                el.appendChild(div);
+            } catch (itemError) {
+                logError('renderUpcoming_item', itemError);
+            }
+        });
+        
+        if (upcoming.length === 0) el.innerHTML = '<div class="small" style="color:var(--muted)">No upcoming repayments</div>';
+    } catch (error) {
+        logError('renderUpcoming', error);
+    }
+}
+
+function renderLoansList() {
+    try {
+        const db = readDB(); 
+        const el = safeGetElement('loansList'); 
+        if (!el) return; 
+        el.innerHTML = '';
+        
+        if (db.length === 0) {
+            el.innerHTML = '<div class="small" style="color:var(--muted);text-align:center;padding:20px">No loans yet</div>';
+            return;
+        }
+        
+        db.forEach(l => {
+            try {
+                const container = document.createElement('div'); 
+                container.className = 'loan-item';
+                container.setAttribute('data-loan-id', l.id);
+                
+                const progressData = calculatePaymentProgress(l);
+                const minutesHeld = getMinutesHeld(l.createdAt, Date.now());
+                
+                container.innerHTML = `
+                    <div class="loan-header">
+                        <div style="flex:1">
+                            <h4 style="margin:0;font-size:16px">${l.id}</h4>
+                            <div class="small" style="color:var(--muted);margin-top:4px">
+                                ${l.name} • ${l.termDays} days<br>
+                                Created ${new Date(l.createdAt).toLocaleDateString()}
+                            </div>
+                        </div>
+                        <div style="text-align:right">
+                            <div class="current-due-amount" style="font-weight:800;font-size:16px">${formatCurrency(progressData.currentDue)}</div>
+                            <div class="small" style="color:var(--muted)">Current Due</div>
+                        </div>
+                    </div>
+                    <div style="margin-top:12px">
+                        <div class="loan-timer" style="background:rgba(6,182,212,0.1);color:var(--accent-a);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;text-align:center;margin-bottom:12px">
+                            ⏱️ ${formatTimeDisplay(minutesHeld)}
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                            <span class="small">Progress</span>
+                            <span class="small progress-text">${progressData.progress}%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:${progressData.progress}%"></div>
+                        </div>
+                        <div style="margin:8px 0;padding:8px;background:rgba(255,255,255,0.02);border-radius:6px;">
+                            <div style="display:flex;justify-content:space-between;font-size:12px">
+                                <span>Paid:</span>
+                                <span class="paid-amount">${formatCurrency(progressData.amountPaid)}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:12px;margin-top:4px">
+                                <span>Remaining:</span>
+                                <span class="remaining-amount">${formatCurrency(progressData.remainingBalance)}</span>
+                            </div>
+                        </div>
+                        <div class="loan-actions">
+                            <button onclick="openLoan('${l.id}')" class="btn">View Details</button>
+                            <button onclick="repayFull('${l.id}')" style="background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:8px;color:inherit">Complete Loan</button>
+                        </div>
+                    </div>
+                `;
+                el.appendChild(container);
+            } catch (loanError) {
+                logError('renderLoansList_loan', loanError, { loanId: l.id });
+            }
+        });
+    } catch (error) {
+        logError('renderLoansList', error);
+    }
+}
+
+function renderHistory() {
+    try {
+        const db = readDB(); 
+        const tbody = safeQuerySelector('#historyTable tbody'); 
+        if (!tbody) return; 
+        tbody.innerHTML = '';
+        
+        db.forEach(l => {
+            try {
+                const tr = document.createElement('tr'); 
+                const totalHeld = l.status === 'paid' ? getMinutesHeld(l.createdAt, l.installments[l.installments.length - 1].paidAt) : getMinutesHeld(l.createdAt, Date.now());
+                const daysHeld = getDaysBetween(l.createdAt, l.status === 'paid' ? l.installments[l.installments.length - 1].paidAt : Date.now());
+                const totalInterest = calculateInterest(l.principal, daysHeld);
+                
+                tr.innerHTML = `
+                    <td>${l.id}</td>
+                    <td>${formatCurrency(l.principal)}</td>
+                    <td>${formatCurrency(l.totalPaid)}</td>
+                    <td>${formatTimeDisplay(totalHeld)}</td>
+                    <td>${formatCurrency(totalInterest)}</td>
+                    <td>${l.status}</td>
+                `; 
+                tbody.appendChild(tr);
+            } catch (rowError) {
+                logError('renderHistory_row', rowError, { loanId: l.id });
+            }
+        });
+    } catch (error) {
+        logError('renderHistory', error);
+    }
+}
+
+// Enhanced repayment schedule rendering
+function renderRepaymentSchedule() {
+    try {
+        const summaryEl = safeGetElement('repaymentSummary');
+        const activeLoansEl = safeGetElement('activeLoansList');
+        const completedLoansEl = safeGetElement('completedLoansList');
+        const detailedEl = safeGetElement('detailedSchedule');
+        
+        if (!summaryEl || !activeLoansEl || !completedLoansEl) return;
+        
+        const db = readDB();
+        const now = Date.now();
+        
+        // Calculate summary statistics
+        const activeLoans = db.filter(l => l.status === 'active');
+        const completedLoans = db.filter(l => l.status === 'paid');
+        const totalDue = activeLoans.reduce((sum, loan) => sum + calculateCurrentDue(loan), 0);
+        const totalPaid = db.reduce((sum, loan) => sum + safeParseNumber(loan.totalPaid, 0), 0);
+        const overdueInstallments = activeLoans.reduce((sum, loan) => {
+            return sum + loan.installments.filter(inst => !inst.paid && inst.due < now).length;
+        }, 0);
+        
+        // Render summary cards
+        summaryEl.innerHTML = `
+            <div class="summary-card">
+                <div class="value">${activeLoans.length}</div>
+                <div class="label">Active Loans</div>
+            </div>
+            <div class="summary-card">
+                <div class="value">${formatCurrency(totalDue)}</div>
+                <div class="label">Total Due</div>
+            </div>
+            <div class="summary-card">
+                <div class="value">${formatCurrency(totalPaid)}</div>
+                <div class="label">Total Paid</div>
+            </div>
+            <div class="summary-card">
+                <div class="value">${overdueInstallments}</div>
+                <div class="label">Overdue Installments</div>
+            </div>
+        `;
+        
+        // Render active loans
+        if (activeLoans.length === 0) {
+            activeLoansEl.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📋</div>
+                    <div>No active loans</div>
+                    <div class="small" style="margin-top:8px">Apply for a new loan to get started</div>
+                </div>
+            `;
+        } else {
+            activeLoansEl.innerHTML = '';
+            activeLoans.forEach(loan => {
+                try {
+                    activeLoansEl.appendChild(createEnhancedLoanCard(loan));
+                } catch (error) {
+                    logError('renderRepaymentSchedule_activeLoan', error, { loanId: loan.id });
+                }
+            });
+        }
+        
+        // Render completed loans
+        if (completedLoans.length === 0) {
+            completedLoansEl.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">✅</div>
+                    <div>No completed loans yet</div>
+                </div>
+            `;
+        } else {
+            completedLoansEl.innerHTML = '';
+            completedLoans.forEach(loan => {
+                try {
+                    completedLoansEl.appendChild(createEnhancedLoanCard(loan));
+                } catch (error) {
+                    logError('renderRepaymentSchedule_completedLoan', error, { loanId: loan.id });
+                }
+            });
+        }
+        
+        // Show detailed schedule only if there are loans
+        detailedEl.style.display = db.length > 0 ? 'block' : 'none';
+        
+    } catch (error) {
+        logError('renderRepaymentSchedule', error);
+    }
+}
+
+// Create enhanced loan card with detailed information
+function createEnhancedLoanCard(loan) {
+    try {
+        const card = document.createElement('div');
+        card.className = `loan-card ${loan.status === 'paid' ? 'completed' : ''}`;
+        card.dataset.loanId = loan.id;
+        
+        const progressData = calculatePaymentProgress(loan);
+        const minutesHeld = getMinutesHeld(loan.createdAt, Date.now());
+        const daysHeld = getDaysBetween(loan.createdAt, Date.now());
+        const totalInterest = calculateInterest(loan.principal, daysHeld);
+        
+        // Calculate installment statistics
+        const now = Date.now();
+        const paidInstallments = loan.installments.filter(inst => inst.paid).length;
+        const totalInstallments = loan.installments.length;
+        const overdueInstallments = loan.installments.filter(inst => !inst.paid && inst.due < now).length;
+        const nextDueInstallment = loan.installments.find(inst => !inst.paid && inst.due >= now);
+        
+        // Determine loan status badge
+        let statusBadge = '';
+        if (loan.status === 'paid') {
+            statusBadge = '<span class="loan-badge completed">COMPLETED</span>';
+        } else if (overdueInstallments > 0) {
+            statusBadge = `<span class="loan-badge overdue">OVERDUE (${overdueInstallments})</span>`;
+        } else {
+            statusBadge = '<span class="loan-badge">ACTIVE</span>';
+        }
+        
+        card.innerHTML = `
+            <div class="loan-header-enhanced">
+                <div style="flex:1">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px">
+                        <h4 style="margin:0;font-size:18px">${loan.id}</h4>
+                        ${statusBadge}
+                    </div>
+                    <div class="small" style="color:var(--muted)">
+                        ${loan.name} • ${loan.termDays} days • Created ${new Date(loan.createdAt).toLocaleDateString()}
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-weight:800;font-size:20px" class="current-due-amount">${formatCurrency(progressData.currentDue)}</div>
+                    <div class="small" style="color:var(--muted)">Current Due</div>
+                </div>
+            </div>
+            
+            <div class="loan-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Principal</div>
+                    <div class="stat-value">${formatCurrency(loan.principal)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Interest</div>
+                    <div class="stat-value">${formatCurrency(totalInterest)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Progress</div>
+                    <div class="stat-value progress-text">${progressData.progress}%</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Installments</div>
+                    <div class="stat-value">${paidInstallments}/${totalInstallments}</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" style="width:${progressData.progress}%"></div>
+            </div>
+            
+            <div style="margin:16px 0;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px">
+                <div style="flex:1;min-width:200px">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                        <span class="small">Amount Paid:</span>
+                        <span class="small paid-amount" style="font-weight:600">${formatCurrency(progressData.amountPaid)}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                        <span class="small">Remaining Balance:</span>
+                        <span class="small remaining-amount" style="font-weight:600">${formatCurrency(progressData.remainingBalance)}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between">
+                        <span class="small">Time Held:</span>
+                        <span class="small" style="font-weight:600">${formatTimeDisplay(minutesHeld)}</span>
+                    </div>
+                </div>
+                
+                ${loan.status === 'active' ? `
+                <div class="installment-actions">
+                    <button onclick="repayFull('${loan.id}')" class="btn" style="min-width:140px">
+                        Complete Loan
+                    </button>
+                    <button onclick="payCustomAmount('${loan.id}')" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:inherit;padding:10px 16px;border-radius:8px;min-width:140px">
+                        Partial Payment
+                    </button>
+                    <button onclick="toggleInstallments('${loan.id}')" style="background:transparent;border:1px solid rgba(255,255,255,0.1);color:inherit;padding:10px 16px;border-radius:8px">
+                        View Schedule
+                    </button>
+                </div>
+                ` : ''}
+            </div>
+            
+            <div id="installments-${loan.id}" class="installment-grid" style="display:none">
+                <!-- Installments will be loaded here when toggled -->
+            </div>
+        `;
+        
+        return card;
+    } catch (error) {
+        logError('createEnhancedLoanCard', error, { loanId: loan?.id });
+        const fallbackCard = document.createElement('div');
+        fallbackCard.className = 'loan-card';
+        fallbackCard.innerHTML = '<div style="color:var(--danger)">Error loading loan details</div>';
+        return fallbackCard;
+    }
+}
+
+// Toggle installment view
+function toggleInstallments(loanId) {
+    try {
+        const installmentsEl = safeGetElement(`installments-${loanId}`);
+        if (!installmentsEl) return;
+        
+        if (installmentsEl.style.display === 'none') {
+            renderLoanInstallments(loanId, installmentsEl);
+            installmentsEl.style.display = 'grid';
+        } else {
+            installmentsEl.style.display = 'none';
+        }
+    } catch (error) {
+        logError('toggleInstallments', error, { loanId });
+    }
+}
+
+// Render individual loan installments
+function renderLoanInstallments(loanId, container) {
+    try {
+        const db = readDB();
+        const loan = db.find(l => l.id === loanId);
+        if (!loan) return;
+        
+        const now = Date.now();
+        container.innerHTML = '';
+        
+        loan.installments.forEach(inst => {
+            try {
+                const dynamicAmount = calculateDynamicInstallmentAmount(loan, inst.idx);
+                const isOverdue = !inst.paid && inst.due < now;
+                const isDueSoon = !inst.paid && inst.due >= now && inst.due <= now + (2 * MINUTES_PER_DAY * MS_PER_MINUTE);
+                
+                let cardClass = 'installment-card';
+                if (inst.paid) cardClass += ' paid';
+                else if (isOverdue) cardClass += ' overdue';
+                else if (isDueSoon) cardClass += ' due-soon';
+                
+                const card = document.createElement('div');
+                card.className = cardClass;
+                card.innerHTML = `
+                    <div class="installment-header">
+                        <div style="font-weight:700">Installment #${inst.idx}</div>
+                        <div class="status ${inst.paid ? 'paid' : isOverdue ? 'overdue' : 'pending'}">
+                            ${inst.paid ? 'Paid' : isOverdue ? 'Overdue' : 'Pending'}
+                        </div>
+                    </div>
+                    <div style="margin:8px 0">
+                        <div class="small" style="color:var(--muted)">Due Date</div>
+                        <div style="font-weight:600">${new Date(inst.due).toLocaleString()}</div>
+                    </div>
+                    <div style="margin:8px 0">
+                        <div class="small" style="color:var(--muted)">Amount</div>
+                        <div style="font-weight:600;font-size:16px">${formatCurrency(dynamicAmount)}</div>
+                    </div>
+                    ${!inst.paid ? `
+                    <div class="installment-actions">
+                        <button onclick="payInstallment('${loanId}', ${inst.idx})" class="btn" style="flex:1;padding:8px 12px;font-size:12px">
+                            Pay Now
+                        </button>
+                    </div>
+                    ` : `
+                    <div style="color:var(--success);font-size:12px;font-weight:600">
+                        Paid on ${new Date(inst.paidAt).toLocaleDateString()}
+                    </div>
+                    `}
+                `;
+                container.appendChild(card);
+            } catch (instError) {
+                logError('renderLoanInstallments_installment', instError, { loanId, installmentIdx: inst.idx });
+            }
+        });
+    } catch (error) {
+        logError('renderLoanInstallments', error, { loanId });
+    }
+}
+
+// Add this function to calculate and display term in real-time
+function updateTermDisplay(amount) {
+    try {
+        const termDisplay = safeGetElement('term-display');
+        const termInput = safeGetElement('m-term');
+        const calculatedTerm = calculateLoanTerm(amount);
+        
+        if (termDisplay) {
+            termDisplay.textContent = `${calculatedTerm} days`;
+        }
+        if (termInput) {
+            termInput.value = calculatedTerm;
+        }
+    } catch (error) {
+        logError('updateTermDisplay', error, { amount });
+    }
+}
+
+// Update the amount input to trigger term calculation
+function setupTermCalculation() {
+    try {
+        const amountInput = safeGetElement('m-amount');
+        if (amountInput) {
+            amountInput.addEventListener('input', function(e) {
+                const amount = safeParseNumber(e.target.value, 0);
+                updateTermDisplay(amount);
+            });
+            
+            // Initialize with default amount if any
+            if (amountInput.value) {
+                updateTermDisplay(safeParseNumber(amountInput.value, 0));
+            }
+        }
+    } catch (error) {
+        logError('setupTermCalculation', error);
+    }
+}
+
+// actions
+function openLoan(id) {
+    try {
+        const db = readDB(); 
+        const loan = db.find(l => l.id === id); 
+        if (!loan) return;
+        
+        switchToView('repayments');
+        closeSidebarMobile();
+        
+        setTimeout(() => {
+            try {
+                const panels = safeQuerySelectorAll('#repaymentSchedule .loan-item');
+                panels.forEach(p => {
+                    if (p.dataset.loanId === id) {
+                        p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        p.classList.add('highlight');
+                        setTimeout(() => p.classList.remove('highlight'), 2500);
+                    }
+                });
+            } catch (scrollError) {
+                logError('openLoan_scroll', scrollError, { loanId: id });
+            }
+        }, 300);
+    } catch (error) {
+        logError('openLoan', error, { id });
+    }
+}
+
+function openAndHighlightLoan(id) {
+    try {
+        switchToView('repayments');
+        closeSidebarMobile();
+        
+        setTimeout(() => {
+            try {
+                const panels = safeQuerySelectorAll('#repaymentSchedule .loan-item');
+                panels.forEach(p => {
+                    if (p.dataset.loanId === id) {
+                        p.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        p.classList.add('highlight');
+                        setTimeout(() => p.classList.remove('highlight'), 2500);
+                    }
+                });
+            } catch (scrollError) {
+                logError('openAndHighlightLoan_scroll', scrollError, { loanId: id });
+            }
+        }, 350);
+    } catch (error) {
+        logError('openAndHighlightLoan', error, { id });
+    }
+}
+
+function payInstallment(loanId, idx) {
+    try {
+        const db = readDB(); 
+        const loan = db.find(l => l.id === loanId); 
+        if (!loan) return;
+        
+        const inst = loan.installments.find(i => i.idx === idx);
+        if (!inst || inst.paid) return;
+        
+        const dynamicAmount = calculateDynamicInstallmentAmount(loan, idx);
+        const minutesHeld = getMinutesHeld(loan.createdAt, Date.now());
+        
+        const amount = prompt(`Pay installment ${idx} for loan ${loanId}\n\nTime Held: ${formatTimeDisplay(minutesHeld)}\nDue: ${new Date(inst.due).toLocaleDateString()}\nAmount Due: ${formatCurrency(dynamicAmount)}\n\nEnter amount to pay:`, formatCurrency(dynamicAmount));
+
+        if (!amount) return;
+
+        const paymentAmount = safeParseNumber(amount, dynamicAmount);
+        
+        if (paymentAmount <= 0) {
+            pushNotification({
+                message: 'Please enter a valid payment amount',
+                level: 'danger',
+                ts: Date.now()
+            });
+            return;
+        }
+
+        // Check if this payment completes the loan
+        if (checkLoanCompletion(loan, paymentAmount)) {
+            // Payment covers the full remaining balance - complete the loan
+            completeLoan(loan, Date.now());
+            writeDB(db);
+            renderAll();
+            return;
+        }
+
+        if (paymentAmount > dynamicAmount) {
+            pushNotification({
+                message: `Payment amount cannot exceed installment amount of ${formatCurrency(dynamicAmount)}`,
+                level: 'danger',
+                ts: Date.now()
+            });
+            return;
+        }
+
+        // Process the payment
+        const now = Date.now();
+        inst.paid = true;
+        inst.paidAt = now;
+        inst.amount = paymentAmount;
+        loan.totalPaid = (loan.totalPaid || 0) + paymentAmount;
+
+        if (paymentAmount < dynamicAmount) {
+            pushNotification({
+                loanId, 
+                message: `Partial payment for installment ${idx}: ${formatCurrency(paymentAmount)} of ${formatCurrency(dynamicAmount)}`,
+                level: 'warning', 
+                ts: now
+            });
+        } else {
+            pushNotification({
+                loanId, 
+                message: `Installment ${idx} paid: ${formatCurrency(paymentAmount)}`,
+                level: 'success', 
+                ts: now
+            });
+        }
+
+        // Check if loan is fully paid after this payment
+        if (loan.installments.every(i => i.paid)) {
+            loan.status = 'paid';
+            const daysHeld = getDaysBetween(loan.createdAt, now);
+            const totalInterest = calculateInterest(loan.principal, daysHeld);
+            pushNotification({
+                loanId, 
+                message: `Loan ${loanId} fully repaid! Held for ${daysHeld} days (${formatTimeDisplay(minutesHeld)}). Interest: ${formatCurrency(totalInterest)}`, 
+                level: 'success', 
+                ts: now
+            });
+        }
+
+        writeDB(db); 
+        renderAll();
+    } catch (error) {
+        logError('payInstallment', error, { loanId, idx });
+    }
+}
+
+function quickRepay(loanId) {
+    try {
+        repayFull(loanId);
+    } catch (error) {
+        logError('quickRepay', error, { loanId });
+    }
+}
+
+// modal & apply - FIXED: No recursion
+function openModal() { 
+    try {
+        const m = safeGetElement('modal'); 
+        if (m) m.style.display = 'flex'; 
+        
+        if (currentUser) {
+            const nameInput = safeGetElement('m-name');
+            const emailInput = safeGetElement('m-email');
+            
+            if (nameInput) nameInput.value = currentUser.name || '';
+            if (emailInput) emailInput.value = currentUser.email || '';
+        }
+        
+        // Setup term calculation when modal opens
+        setTimeout(setupTermCalculation, 100);
+        
+        // Initialize term display with default amount
+        const amountInput = safeGetElement('m-amount');
+        if (amountInput) {
+            updateTermDisplay(safeParseNumber(amountInput.value, 0));
+        }
+    } catch (error) {
+        logError('openModal', error);
+    }
+}
+
+function closeModal() { 
+    try {
+        const m = safeGetElement('modal'); 
+        if (m) m.style.display = 'none'; 
+    } catch (error) {
+        logError('closeModal', error);
+    }
+}
+
+function submitApply() {
+    try {
+        const name = safeGetElement('m-name') ? safeGetElement('m-name').value : currentUser?.name;
+        const email = safeGetElement('m-email') ? safeGetElement('m-email').value : currentUser?.email;
+        const amount = safeGetElement('m-amount') ? safeParseNumber(safeGetElement('m-amount').value, 0) : 0;
+        const termInput = safeGetElement('m-term');
+        const termDays = termInput ? safeParseNumber(termInput.value, calculateLoanTerm(amount)) : calculateLoanTerm(amount);
+        
+        if (amount <= 0) { 
+            pushNotification({
+                message: 'Enter a valid amount', 
+                level: 'danger', 
+                ts: Date.now()
+            }); 
+            return; 
+        }
+        
+        closeModal();
+        
+        const newLoan = createLoanObj(name, email, amount, termDays, Date.now());
+        const db = readDB(); 
+        db.push(newLoan); 
+        writeDB(db); 
+        renderAll(); 
+        
+        pushNotification({
+            loanId: newLoan.id, 
+            message: `Loan ${newLoan.id} created for ${formatCurrency(amount)}. Term: ${termDays} days. You can complete the loan anytime by paying principal + accumulated interest!`, 
+            level: 'info', 
+            ts: Date.now()
+        });
+    } catch (error) {
+        logError('submitApply', error);
+    }
+}
+
+// view switching
+function switchView(e) { 
+    try {
+        const btn = e.currentTarget; 
+        if (!btn) return; 
+        
+        safeQuerySelectorAll('.nav button').forEach(b => b.classList.remove('active')); 
+        btn.classList.add('active'); 
+        switchTo(btn.dataset.view); 
+        closeSidebarMobile();
+    } catch (error) {
+        logError('switchView', error);
+    }
+}
+
+function switchTo(name) { 
+    try {
+        safeQuerySelectorAll('main .content section').forEach(s => s.style.display = 'none'); 
+        const el = safeGetElement('view-' + name); 
+        if (el) el.style.display = 'block'; 
+    } catch (error) {
+        logError('switchTo', error, { name });
+    }
+}
+
+function switchToView(name) { 
+    try {
+        safeQuerySelectorAll('.nav button').forEach(b => b.classList.remove('active')); 
+        const navBtn = Array.from(safeQuerySelectorAll('.nav button')).find(b => b.dataset.view === name); 
+        if (navBtn) navBtn.classList.add('active'); 
+        switchTo(name); 
+    } catch (error) {
+        logError('switchToView', error, { name });
+    }
+}
+
+// Enhanced initialization with comprehensive error handling
+function init() {
+    try {
+        // Check if we're in a browser environment
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            throw new Error('Not in a browser environment');
+        }
+
+        // Check if localStorage is available
+        if (typeof localStorage === 'undefined') {
+            throw new Error('localStorage is not available');
+        }
+
+        currentUser = safeLocalStorageGet("loggedInUser");
+        
+        if (!currentUser) {
+            console.warn('No logged in user found, redirecting to sign-in');
+            // Use setTimeout to avoid blocking
+            setTimeout(() => {
+                try {
+                    window.location.href = "sign-in.html";
+                } catch (redirectError) {
+                    console.error('Redirect failed:', redirectError);
+                    document.body.innerHTML = '<div style="padding: 20px; text-align: center;">Please sign in at sign-in.html</div>';
+                }
+            }, 100);
+            return;
+        }
+        
+        // Validate user object
+        if (!currentUser.name || !currentUser.email) {
+            console.error('Invalid user object:', currentUser);
+            alert('Invalid user session. Please sign in again.');
+            safeLocalStorageSet("loggedInUser", null);
+            window.location.href = "sign-in.html";
+            return;
+        }
+        
+        // Set welcome message safely
+        const welcomeEl = safeGetElement("welcomeUser");
+        if (welcomeEl) {
+            welcomeEl.textContent = `Hello, ${currentUser.name}`;
+        }
+        
+        // Set up logout button with error handling
+        const logoutBtn = safeGetElement("logoutBtn");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", (e) => {
+                try {
+                    e.preventDefault();
+                    safeLocalStorageSet("loggedInUser", null);
+                    if (timerInterval) {
+                        clearInterval(timerInterval);
+                    }
+                    alert("You have been logged out.");
+                    window.location.href = "sign-in.html";
+                } catch (logoutError) {
+                    logError('logout', logoutError);
+                    alert('Logout failed. Please try again.');
+                }
+            });
+        }
+        
+        // Initialize with error recovery
+        try {
+            seedIfEmpty();
+            renderAll();
+            switchToView('dashboard');
+        } catch (renderError) {
+            logError('initialRender', renderError);
+            // Show basic interface even if rendering fails
+            const contentEl = safeGetElement('view-dashboard');
+            if (contentEl) {
+                contentEl.innerHTML = '<div style="padding: 20px; text-align: center;">Welcome to Loan Credit Dashboard</div>';
+            }
+        }
+
+        // Start reminder system with error boundary
+        timerInterval = setInterval(() => {
+            try {
+                checkReminders();
+            } catch (timerError) {
+                logError('timerInterval', timerError);
+            }
+        }, 1000);
+        
+    } catch (error) {
+        logError('init', error);
+        
+        // Show user-friendly error message
+        const appContainer = safeQuerySelector('.app') || document.body;
+        if (appContainer) {
+            appContainer.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: white;">
+                    <h2>Something went wrong</h2>
+                    <p>We're having trouble loading the application.</p>
+                    <button onclick="window.location.reload()" style="padding: 10px 20px; margin: 10px; background: #06b6d4; border: none; border-radius: 8px; color: white; cursor: pointer;">
+                        Reload Application
+                    </button>
+                    <button onclick="localStorage.clear(); window.location.reload()" style="padding: 10px 20px; margin: 10px; background: #ef4444; border: none; border-radius: 8px; color: white; cursor: pointer;">
+                        Clear Data & Reload
+                    </button>
+                </div>
+            `;
+        }
+    }
+}
+
+// Global error handler for uncaught exceptions
+window.addEventListener('error', function(event) {
+    logError('global_error', event.error, {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+    });
+});
+
+// Handle promise rejections
+window.addEventListener('unhandledrejection', function(event) {
+    logError('unhandled_rejection', event.reason);
+});
+
+// Data recovery and validation function
+function validateAndRecoverData() {
+    try {
+        const db = readDB();
+        const recoveredDb = [];
+        
+        db.forEach(loan => {
+            try {
+                // Validate required fields
+                if (!loan.id || !loan.principal || !loan.termDays) {
+                    console.warn('Skipping invalid loan:', loan);
+                    return;
+                }
+                
+                // Ensure installments array exists and is valid
+                if (!Array.isArray(loan.installments)) {
+                    loan.installments = [];
+                }
+                
+                // Validate and repair installment data
+                loan.installments = loan.installments.filter(inst => 
+                    inst && typeof inst === 'object' && 
+                    typeof inst.idx === 'number' && 
+                    typeof inst.due === 'number'
+                );
+                
+                // Ensure status is valid
+                if (!['active', 'paid', 'error'].includes(loan.status)) {
+                    loan.status = 'active';
+                }
+                
+                // Ensure totalPaid is a number
+                loan.totalPaid = safeParseNumber(loan.totalPaid, 0);
+                
+                recoveredDb.push(loan);
+            } catch (loanError) {
+                logError('validateAndRecoverData_loan', loanError, { loanId: loan.id });
+            }
+        });
+        
+        if (recoveredDb.length !== db.length) {
+            console.warn(`Recovered ${recoveredDb.length} out of ${db.length} loans`);
+            writeDB(recoveredDb);
+        }
+        
+        return recoveredDb;
+    } catch (error) {
+        logError('validateAndRecoverData', error);
+        return [];
+    }
+}
+
+// Direct function assignments - NO RECURSION
+window.openLoan = openLoan;
+window.payInstallment = payInstallment;
+window.quickRepay = quickRepay;
+window.repayFull = repayFull;
+window.payCustomAmount = payCustomAmount;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.submitApply = submitApply;
+window.clearNotifications = clearNotifications;
+window.toggleSidebar = toggleSidebar;
+window.closeSidebarMobile = closeSidebarMobile;
+window.toggleInstallments = toggleInstallments;
+
+// Start the app with safety wrapper
+document.addEventListener('DOMContentLoaded', function() {
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        try {
+            init();
+            // Call data recovery on startup
+            setTimeout(validateAndRecoverData, 2000);
+        } catch (startupError) {
+            logError('DOMContentLoaded', startupError);
+        }
+    }, 100);
+});
+</script>
+</body>
+</html>
